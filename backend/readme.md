@@ -209,20 +209,19 @@ GET
 
 ---
 
-# Captain Registration API Documentation
+# Captain API Documentation
 
-## Endpoint
+## Captain Registration
 
-`POST /captains/register`
+### Endpoint
 
-## Description
+`POST /captain/register`
 
-Registers a new captain (driver) with vehicle details. Requires personal and vehicle information. Password is securely hashed before storing. Returns the created captain object (excluding password).
+### Description
 
-## HTTP Method
-POST
+Registers a new captain (driver) with personal and vehicle details. Password is securely hashed before storing. Returns a JWT token and the created captain object (excluding password).
 
-## Request Body
+### Request Body
 
 Send as JSON:
 
@@ -243,23 +242,26 @@ Send as JSON:
 }
 ```
 
-## Responses
+### Responses
 
 - **201 Created**
   - Success. Returns:
     ```json
     {
-      "_id": "...",
-      "fullname": {
-        "firstname": "Amit",
-        "lastname": "Singh"
-      },
-      "email": "amit@example.com",
-      "vehicle": {
-        "color": "Red",
-        "plate": "MH12AB1234",
-        "capacity": 4,
-        "vehicleType": "car"
+      "token": "<jwt_token>",
+      "captain": {
+        "_id": "...",
+        "fullname": {
+          "firstname": "Amit",
+          "lastname": "Singh"
+        },
+        "email": "amit@example.com",
+        "vehicle": {
+          "color": "Red",
+          "plate": "MH12AB1234",
+          "capacity": 4,
+          "vehicleType": "car"
+        }
       }
     }
     ```
@@ -280,7 +282,7 @@ Send as JSON:
 - **500 Internal Server Error**
   - Unexpected error or duplicate email.
 
-## Validation Rules
+### Validation Rules
 
 - `fullname.firstname`: required, string, min 3 characters
 - `fullname.lastname`: required, string, min 3 characters
@@ -290,6 +292,126 @@ Send as JSON:
 - `vehicle.plate`: required, string, min 3 characters
 - `vehicle.capacity`: required, integer, min 1
 - `vehicle.vehicleType`: required, one of: car, motorcycle, auto
+
+---
+
+## Captain Login
+
+### Endpoint
+
+`POST /captain/login`
+
+### Description
+
+Authenticates a captain using email and password. Returns a JWT token and the captain object (excluding password).
+
+### Request Body
+
+```json
+{
+  "email": "amit@example.com",   // required, valid email
+  "password": "yourPassword"     // required, string, min 6 chars
+}
+```
+
+### Responses
+
+- **200 OK**
+  - Success. Returns:
+    ```json
+    {
+      "token": "<jwt_token>",
+      "captain": { ...captainObject }
+    }
+    ```
+- **400 Bad Request**
+  - Validation failed. Returns:
+    ```json
+    {
+      "errors": [
+        {
+          "msg": "Enter a valid email",
+          "param": "email",
+          "location": "body"
+        }
+        // ...other errors
+      ]
+    }
+    ```
+- **401 Unauthorized**
+  - Invalid email or password. Returns:
+    ```json
+    {
+      "message": "Invalid email or password"
+    }
+    ```
+
+---
+
+## Captain Profile
+
+### Endpoint
+
+`GET /captain/profile`
+
+### Description
+
+Returns the authenticated captain's profile information. Requires a valid JWT token (sent via cookie or Authorization header).
+
+### Authentication
+
+- Requires authentication (JWT token).
+
+### Responses
+
+- **200 OK**
+  - Success. Returns:
+    ```json
+    {
+      "_id": "...",
+      "fullname": {
+        "firstname": "Amit",
+        "lastname": "Singh"
+      },
+      "email": "amit@example.com",
+      "vehicle": {
+        "color": "Red",
+        "plate": "MH12AB1234",
+        "capacity": 4,
+        "vehicleType": "car"
+      }
+    }
+    ```
+- **401 Unauthorized**
+  - Missing or invalid token.
+
+---
+
+## Captain Logout
+
+### Endpoint
+
+`GET /captain/logout`
+
+### Description
+
+Logs out the authenticated captain by blacklisting the JWT token and clearing the cookie.
+
+### Authentication
+
+- Requires authentication (JWT token).
+
+### Responses
+
+- **200 OK**
+  - Success. Returns:
+    ```json
+    {
+      "message": "Logged out successfully."
+    }
+    ```
+- **401 Unauthorized**
+  - Missing or invalid token.
 
 ---
 
